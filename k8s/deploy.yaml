@@ -14,7 +14,7 @@ spec:
       labels:
         app: console-project
     spec:
-       imagePullSecrets:
+      imagePullSecrets:
         - name: regcred
       containers:
         - name: console-project
