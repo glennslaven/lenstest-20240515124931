@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: https://registry.cloudzilla.ai/test/${{ env.IMAGE_NAME }}
+          images: https://registry.cloudzilla.ai/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
