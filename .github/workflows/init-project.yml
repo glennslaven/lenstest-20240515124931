@@ -28,7 +28,7 @@ jobs:
 
       - name: downcase REPO
         run: |
-          echo "IMAGE_NAME=${GITHUB_ACTION_REPOSITORY,,}" >>${GITHUB_ENV}
+          echo "IMAGE_NAME=${REPO,,}" >>${GITHUB_ENV}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
