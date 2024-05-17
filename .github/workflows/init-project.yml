@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: https://registry.cloudzilla.ai/
           username: admin
@@ -28,16 +28,18 @@ jobs:
 
       - name: downcase REPO
         run: |
-          echo "IMAGE_NAME=${REPO,,}" >>${GITHUB_ENV}
+          echo "IMAGE_NAME=${GITHUB_ACTION_REPOSITORY,,}" >>${GITHUB_ENV}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: https://registry.cloudzilla.ai/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
