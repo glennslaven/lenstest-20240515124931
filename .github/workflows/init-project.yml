@@ -66,7 +66,7 @@ jobs:
           main() {
             setCluster
 
-            kubectl create secret docker-registry regcred --docker-server="${DOCKER_SERVER}" --docker-username="${DOCKER_USERNAME}" --docker-password="${DOCKER_PASSWORD}" || true
+            kubectl create secret docker-registry regcred --docker-server="${DOCKER_SERVER}" --docker-username="${DOCKER_USERNAME}" --docker-password="${DOCKER_PASSWORD}" --dry-run=client -o yaml | kubectl apply -f -
             envsubst '$FULL_IMAGE_WITH_TAG $POD_NAME' < ${GITHUB_WORKSPACE}/k8s/deploy.yaml | kubectl apply -f -
             kubectl apply -f ${GITHUB_WORKSPACE}/k8s/ingress-upstream.yaml
 
