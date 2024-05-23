@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: section-project-deployment
+  name: $POD_NAME-deployment
   labels:
-    app: console-project
+    app: $POD_NAME
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: console-project
+      app: $POD_NAME
   template:
     metadata:
       labels:
-        app: console-project
+        app: $POD_NAME
     spec:
-      imagePullSecrets:
-        - name: regcred
       containers:
-        - name: console-project
-          image: registry.cloudzilla.ai/${IMAGE_NAME}:master
+        - name: $POD_NAME
+          image: ${FULL_IMAGE_WITH_TAG}
           imagePullPolicy: Always
           resources:
             limits:
-              cpu: 2000m
-              memory: 512Mi
+              cpu: {{cpuResource}}
+              memory: {{memoryResource}}
             requests:
-              cpu: 2000m
-              memory: 512Mi
+              cpu: {{cpuResource}}
+              memory: {{memoryResource}}
           ports:
             - containerPort: 80
+      imagePullSecrets:
+        - name: regcred
