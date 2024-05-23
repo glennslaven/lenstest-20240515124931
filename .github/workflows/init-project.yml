@@ -5,8 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  REPO: ${{ github.repository }}
+  IMAGE_PREFIX: ${{ secrets.DOCKER_SERVER }}/${{ secrets.DOCKER_PROJECT_PATH }}/
 
 jobs:
   build-push:
@@ -17,24 +16,25 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
-          registry: https://registry.cloudzilla.ai/
-          username: admin
-          password: 'lfcbMB0NZd4x9wHs'
+          registry: https://${{ secrets.DOCKER_SERVER }}/
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: downcase REPO
         run: |
-          echo "IMAGE_NAME=${REPO,,}" >>${GITHUB_ENV}
+          image="${GITHUB_REPOSITORY#*/}"
+          echo "IMAGE_NAME=${image,,}" >>${GITHUB_ENV}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
-          images: registry.cloudzilla.ai/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE_PREFIX }}${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -48,8 +48,11 @@ jobs:
         env:
           SECTION_K8S_API_URL: '${{ secrets.SECTION_K8S_API_URL }}'
           SECTION_API_TOKEN: '${{ secrets.SECTION_API_TOKEN }}'
-          GHCR_TOKEN: '${{ secrets.GHCR_TOKEN }}'
-          GHCR_USERNAME: '${{ secrets.GHCR_USERNAME }}'
+          DOCKER_SERVER: '${{ secrets.DOCKER_SERVER }}'
+          DOCKER_USERNAME: '${{ secrets.DOCKER_USERNAME }}'
+          DOCKER_PASSWORD: '${{ secrets.DOCKER_PASSWORD }}'
+          FULL_IMAGE_WITH_TAG: '${{ env.DOCKER_METADATA_OUTPUT_TAGS }}'
+          POD_NAME: '${{ env.IMAGE_NAME }}'
           DEBUG: 1
         run: |
           #!/bin/bash
@@ -63,8 +66,8 @@ jobs:
           main() {
             setCluster
 
-            kubectl create secret docker-registry regcred --docker-server=registry.cloudzilla.ai --docker-username='robot$glennslaven+pull-secret' --docker-password="EcV3hoQhgwCZVTrqhbIzODVVtUqsDsjg" --dry-run=client --output=yaml | kubectl apply -f -
-            envsubst '$IMAGE_NAME' < ${GITHUB_WORKSPACE}/k8s/deploy.yaml | kubectl apply -f -
+            kubectl create secret docker-registry regcred --docker-server="${DOCKER_SERVER}" --docker-username="${DOCKER_USERNAME}" --docker-password="${DOCKER_PASSWORD}" || true
+            envsubst '$FULL_IMAGE_WITH_TAG $POD_NAME' < ${GITHUB_WORKSPACE}/k8s/deploy.yaml | kubectl apply -f -
             kubectl apply -f ${GITHUB_WORKSPACE}/k8s/ingress-upstream.yaml
 
             kubectl rollout restart deployment section-project-deployment
